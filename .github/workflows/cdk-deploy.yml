@@ -1,0 +1,75 @@
+name: Deploy CDK Stack
+
+on:
+  push:
+    branches:
+      - stage
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Node.js (required by CDK)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Set up Python 3.9
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # Clean Temporary Directories
+      - name: Clean Temporary Directories
+        run: |
+          rm -rf cdk.out
+        
+      # Set up Python virtual environment and install dependencies
+      - name: Install Python dependencies
+        run: |
+          python3.9 -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+
+
+      # Verify psutil_layer.zip contents
+      - name: Verify psutil_layer.zip contents
+        run: |
+          unzip -l assets/psutil_layer.zip
+
+      # Install AWS CDK globally
+      - name: Install AWS CDK
+        run: |
+          source .venv/bin/activate
+          npm install -g aws-cdk
+
+      # Configure AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Deploy CDK Stack
+      - name: Deploy CDK Stack
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          source .venv/bin/activate  # Activate the virtual environment
+          if [ "${{ github.ref }}" == "refs/heads/stage" ]; then
+            cdk deploy CdkGlueYellowtaxiStack-Stage -c env_name=stage --require-approval never --force
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            cdk deploy CdkGlueYellowtaxiStack-Prod -c env_name=prod --require-approval never --force
+          fi
