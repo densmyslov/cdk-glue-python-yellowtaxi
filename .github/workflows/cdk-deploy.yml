@@ -63,7 +63,7 @@ jobs:
         run: |
           source .venv/bin/activate  # Activate the virtual environment
           if [ "${{ github.ref }}" == "refs/heads/stage" ]; then
-            cdk deploy CdkGlueYellowtaxiStack-Stage -c env_name=stage --require-approval never --force
+            cdk deploy CdkGluePythonYellowtaxiStack-Stage -c env_name=stage --require-approval never --force
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            cdk deploy CdkGlueYellowtaxiStack-Prod -c env_name=prod --require-approval never --force
+            cdk deploy CdkGluePythonYellowtaxiStack-Prod -c env_name=prod --require-approval never --force
           fi

@@ -18,8 +18,8 @@ print(f"Stage Environment: Account={os.getenv('CDK_DEFAULT_ACCOUNT')}, Region={o
 print(f"Prod Environment: Account={os.getenv('CDK_DEFAULT_ACCOUNT')}, Region={os.getenv('CDK_DEFAULT_REGION')}")
 
 
-CdkGlueRayYellowtaxiStack(app, "CdkGlueYellowtaxiStack-Stage", env=stage_env)
-CdkGlueRayYellowtaxiStack(app, "CdkGlueYellowtaxiStack-Prod", env=prod_env)
+CdkGluePythonYellowtaxiStack(app, "CdkGluePythonYellowtaxiStack-Stage", env=stage_env)
+CdkGluePythonYellowtaxiStack(app, "CdkGluePythonYellowtaxiStack-Prod", env=prod_env)
 
 # Synthesize the app
 app.synth()
