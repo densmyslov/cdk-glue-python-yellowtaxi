@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Set up Node.js (required by CDK)
+      # Set up Node.js (required by CDK CLI)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -31,12 +31,10 @@ jobs:
       - name: Clean Temporary Directories
         run: |
           rm -rf cdk.out
-
-      - name: Remove cached context
-        run: rm -f cdk.context.json
+          rm -f cdk.context.json
 
       # Set up Python virtual environment and install dependencies
-      - name: Install Python dependencies
+      - name: Set up Virtual Environment and Install Dependencies
         run: |
           python3.9 -m venv .venv
           source .venv/bin/activate
@@ -44,13 +42,13 @@ jobs:
 
       # Install AWS CDK globally
       - name: Install AWS CDK
-        run: |
-          source .venv/bin/activate
-          npm install -g aws-cdk
+        run: npm install -g aws-cdk
 
       # Bootstrap CDK Environment
       - name: Bootstrap CDK Environment
-        run: cdk bootstrap aws://054949129428/${{ secrets.AWS_REGION }} --bootstrap-bucket-name cdk-bergena-yellowtaxi-${{ secrets.AWS_REGION }}
+        run: |
+          source .venv/bin/activate
+          cdk bootstrap aws://054949129428/${{ secrets.AWS_REGION }} --bootstrap-bucket-name cdk-bergena-yellowtaxi-${{ secrets.AWS_REGION }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -66,7 +64,7 @@ jobs:
       # Synthesize CDK Stack
       - name: Synthesize CDK Stack
         run: |
-          source .venv/bin/activate  # Activate the virtual environment
+          source .venv/bin/activate
           cdk synth
         env:
           CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -81,9 +79,14 @@ jobs:
       # Deploy CDK Stack
       - name: Deploy CDK Stack
         run: |
-          source .venv/bin/activate  # Activate the virtual environment
+          source .venv/bin/activate
           if [ "${{ github.ref }}" == "refs/heads/stage" ]; then
             cdk deploy CdkGluePythonYellowtaxiStack-Stage -c env_name=stage --require-approval never --force
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             cdk deploy CdkGluePythonYellowtaxiStack-Prod -c env_name=prod --require-approval never --force
           fi
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
