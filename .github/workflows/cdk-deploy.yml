@@ -31,7 +31,10 @@ jobs:
       - name: Clean Temporary Directories
         run: |
           rm -rf cdk.out
-        
+
+      - name: Remove cached context
+        run: rm -f cdk.context.json
+
       # Set up Python virtual environment and install dependencies
       - name: Install Python dependencies
         run: |
@@ -45,6 +48,13 @@ jobs:
           source .venv/bin/activate
           npm install -g aws-cdk
 
+      # Bootstrap CDK Environment
+      - name: Bootstrap CDK Environment
+        run: cdk bootstrap aws://054949129428/${{ secrets.AWS_REGION }} --bootstrap-bucket-name cdk-bergena-yellowtaxi-${{ secrets.AWS_REGION }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
       # Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -53,13 +63,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Deploy CDK Stack
-      - name: Deploy CDK Stack
+      # Synthesize CDK Stack
+      - name: Synthesize CDK Stack
+        run: |
+          source .venv/bin/activate  # Activate the virtual environment
+          cdk synth
         env:
           CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # Debug synthesized template
+      - name: Debug synthesized template
+        run: cat cdk.out/CdkGluePythonYellowtaxiStack-Stage.template.json
+
+      # Deploy CDK Stack
+      - name: Deploy CDK Stack
         run: |
           source .venv/bin/activate  # Activate the virtual environment
           if [ "${{ github.ref }}" == "refs/heads/stage" ]; then
