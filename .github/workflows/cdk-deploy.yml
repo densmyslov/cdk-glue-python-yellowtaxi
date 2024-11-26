@@ -39,12 +39,6 @@ jobs:
           source .venv/bin/activate
           pip install -r requirements.txt
 
-
-      # Verify psutil_layer.zip contents
-      - name: Verify psutil_layer.zip contents
-        run: |
-          unzip -l assets/psutil_layer.zip
-
       # Install AWS CDK globally
       - name: Install AWS CDK
         run: |
